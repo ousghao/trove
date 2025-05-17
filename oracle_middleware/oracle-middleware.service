@@ -1,0 +1,18 @@
+[Unit]
+Description=Oracle Middleware Service for Trove
+After=trove-api.service trove-taskmanager.service
+Wants=trove-api.service trove-taskmanager.service
+
+[Service]
+Type=simple
+User=stack
+Group=stack
+WorkingDirectory=/opt/stack/trove/oracle_middleware
+ExecStart=/usr/bin/python3 /opt/stack/trove/oracle_middleware/main.py
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/trove/oracle-middleware.log
+StandardError=append:/var/log/trove/oracle-middleware.log
+
+[Install]
+WantedBy=multi-user.target 

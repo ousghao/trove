@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Exit on any error
+set -e
+
+# Only run if Trove is enabled
+if [[ "$ENABLED_SERVICES" =~ "trove" ]]; then
+    echo "Installing Oracle middleware service..."
+    
+    # Make installation script executable
+    chmod +x /opt/stack/trove/oracle_middleware/install_middleware.sh
+    
+    # Run installation script
+    /opt/stack/trove/oracle_middleware/install_middleware.sh
+fi 

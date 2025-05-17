@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Exit on any error
+set -e
+
+# Stop and disable the service
+sudo systemctl stop oracle-middleware || true
+sudo systemctl disable oracle-middleware || true
+
+# Remove service file
+sudo rm -f /etc/systemd/system/oracle-middleware.service
+
+# Reload systemd
+sudo systemctl daemon-reload 
