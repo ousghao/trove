@@ -302,6 +302,11 @@ EOF
     do
         sudo cp ${common_cloudinit} /etc/trove/cloudinit/${datastore}.cloudinit
     done
+
+    # Configure Trove to use middleware only
+    iniset $TROVE_CONF DEFAULT use_nova false
+    iniset $TROVE_CONF DEFAULT use_glance false
+    iniset $TROVE_CONF DEFAULT dummy_image_id "00000000-0000-0000-0000-000000000000"
 }
 
 # install_trove() - Collect source and prepare
@@ -500,7 +505,7 @@ function create_guest_image {
 
     echo "Register the image in datastore"
     $TROVE_MANAGE datastore_update $TROVE_DATASTORE_TYPE ""
-    $TROVE_MANAGE datastore_version_update $TROVE_DATASTORE_TYPE $TROVE_DATASTORE_VERSION $TROVE_DATASTORE_TYPE "" "" 1 --image-tags trove
+    $TROVE_MANAGE datastore_version_update $TROVE_DATASTORE_TYPE $TROVE_DATASTORE_VERSION $TROVE_DATASTORE_TYPE "" "" 1 --image-id $(iniget $TROVE_CONF DEFAULT dummy_image_id)
     $TROVE_MANAGE datastore_update $TROVE_DATASTORE_TYPE $TROVE_DATASTORE_VERSION
 
     echo "Add parameter validation rules if available"
@@ -667,6 +672,68 @@ function config_mgmt_security_group {
 
     iniset $TROVE_CONF DEFAULT management_security_groups $sgid
 }
+
+# Oracle Middleware integration for Trove
+
+function _install_oracle_middleware {
+    echo "Installing Oracle middleware service..."
+    
+    # Create necessary directories
+    sudo mkdir -p /var/log/trove
+    sudo chown stack:stack /var/log/trove
+    
+    # Install systemd service
+    sudo cp $TROVE_DIR/oracle_middleware/oracle-middleware.service /etc/systemd/system/
+    sudo systemctl daemon-reload
+    sudo systemctl enable oracle-middleware
+    
+    # Start the service
+    sudo systemctl start oracle-middleware
+    
+    # Wait for service to be ready
+    echo "Waiting for Oracle middleware to start..."
+    for i in {1..30}; do
+        if curl -s http://localhost:8000/status/test > /dev/null; then
+            echo "Oracle middleware is running!"
+            return 0
+        fi
+        sleep 1
+    done
+    
+    echo "Failed to start Oracle middleware"
+    return 1
+}
+
+function _cleanup_oracle_middleware {
+    echo "Cleaning up Oracle middleware service..."
+    sudo systemctl stop oracle-middleware || true
+    sudo systemctl disable oracle-middleware || true
+    sudo rm -f /etc/systemd/system/oracle-middleware.service
+    sudo systemctl daemon-reload
+}
+
+# Hook into Trove's post-config phase
+function trove_configure_oracle_middleware {
+    _install_oracle_middleware
+}
+
+# Hook into Trove's cleanup phase
+function trove_cleanup_oracle_middleware {
+    _cleanup_oracle_middleware
+}
+
+# Register our hooks
+if is_service_enabled trove; then
+    # Add our post-config hook
+    function trove_post_config {
+        trove_configure_oracle_middleware
+    }
+    
+    # Add our cleanup hook
+    function trove_cleanup {
+        trove_cleanup_oracle_middleware
+    }
+fi
 
 # Dispatcher for trove plugin
 if is_service_enabled trove; then

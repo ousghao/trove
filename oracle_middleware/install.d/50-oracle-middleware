@@ -7,6 +7,13 @@ set -e
 if [[ "$ENABLED_SERVICES" =~ "trove" ]]; then
     echo "Installing Oracle middleware service..."
     
+    # Ensure virtual environment exists
+    if [ ! -d "/opt/stack/trove/oracle_middleware/venv" ]; then
+        echo "Creating virtual environment..."
+        python3 -m venv /opt/stack/trove/oracle_middleware/venv
+        /opt/stack/trove/oracle_middleware/venv/bin/pip install -r /opt/stack/trove/oracle_middleware/requirements.txt
+    fi
+    
     # Make installation script executable
     chmod +x /opt/stack/trove/oracle_middleware/install_middleware.sh
     
