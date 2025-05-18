@@ -7,6 +7,16 @@ set -e
 if [[ "$ENABLED_SERVICES" =~ "trove" ]]; then
     echo "Installing Oracle middleware service..."
     
+    # Disable Nova-related services if they're not needed
+    if [[ ! "$ENABLED_SERVICES" =~ "n-" ]]; then
+        echo "Disabling Nova-related services..."
+        # Remove Nova from enabled services
+        ENABLED_SERVICES=$(echo $ENABLED_SERVICES | sed 's/n-//g')
+        # Disable Nova compute
+        sudo systemctl stop nova-compute || true
+        sudo systemctl disable nova-compute || true
+    fi
+    
     # Ensure virtual environment exists
     if [ ! -d "/opt/stack/trove/oracle_middleware/venv" ]; then
         echo "Creating virtual environment..."
@@ -19,4 +29,10 @@ if [[ "$ENABLED_SERVICES" =~ "trove" ]]; then
     
     # Run installation script
     /opt/stack/trove/oracle_middleware/install_middleware.sh
+    
+    # Ensure service starts after Trove
+    if ! systemctl is-enabled oracle-middleware; then
+        echo "Failed to enable oracle-middleware service"
+        exit 1
+    fi
 fi 

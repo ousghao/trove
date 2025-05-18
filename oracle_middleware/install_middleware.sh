@@ -10,6 +10,9 @@ sudo chown stack:stack /var/log/trove
 # Copy service file
 sudo cp /opt/stack/trove/oracle_middleware/oracle-middleware.service /etc/systemd/system/
 
+# Ensure service is stopped before reconfiguring
+sudo systemctl stop oracle-middleware || true
+
 # Reload systemd
 sudo systemctl daemon-reexec
 sudo systemctl daemon-reload
@@ -23,7 +26,14 @@ echo "Waiting for Oracle middleware to start..."
 for i in {1..60}; do
     if curl -s http://localhost:8000/status/test > /dev/null; then
         echo "Oracle middleware is running!"
-        exit 0
+        # Verify service status
+        if systemctl is-active --quiet oracle-middleware; then
+            echo "Oracle middleware service is active and running"
+            exit 0
+        else
+            echo "Service is not active despite being reachable"
+            exit 1
+        fi
     fi
     echo "Waiting for service to start... (attempt $i/60)"
     sleep 2

@@ -2,6 +2,8 @@
 Description=Oracle Middleware Service for Trove
 After=trove-api.service trove-taskmanager.service
 Wants=trove-api.service trove-taskmanager.service
+# Explicitly declare we don't need Nova
+Conflicts=nova-compute.service
 
 [Service]
 Type=simple
