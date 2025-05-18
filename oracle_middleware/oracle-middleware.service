@@ -1,15 +1,16 @@
 [Unit]
 Description=Oracle Middleware Service for Trove
-After=trove-api.service trove-taskmanager.service
-Wants=trove-api.service trove-taskmanager.service
+After=trove-api.service trove-taskmanager.service mysql.service rabbitmq-server.service
+Wants=trove-api.service trove-taskmanager.service mysql.service rabbitmq-server.service
 # Explicitly declare we don't need Nova
-Conflicts=nova-compute.service
+Conflicts=nova-compute.service nova-api.service nova-conductor.service nova-scheduler.service
 
 [Service]
 Type=simple
 User=stack
 Group=stack
 WorkingDirectory=/opt/stack/trove/oracle_middleware
+Environment=PYTHONUNBUFFERED=1
 ExecStart=/opt/stack/trove/oracle_middleware/venv/bin/python /opt/stack/trove/oracle_middleware/main.py
 Restart=always
 RestartSec=10
