@@ -17,7 +17,7 @@ sudo chown -R stack:stack .
 # Recreate venv to avoid architecture errors
 rm -rf venv
 python3 -m venv venv
-chmod +x venv/bin/python
+
 
 # Activate and install dependencies
 source venv/bin/activate
