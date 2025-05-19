@@ -425,15 +425,26 @@ function setup_mgmt_network() {
 
 # start_trove() - Start running processes, including screen
 function start_trove {
-    if [[ "${TROVE_USE_MOD_WSGI}" == "TRUE" ]]; then
-        echo "Restarting Apache server ..."
-        enable_apache_site trove-api
-        restart_apache_server
-    else
-        run_process tr-api "$TROVE_BIN_DIR/trove-api --config-file=$TROVE_CONF"
+    if is_service_enabled tr-api; then
+        echo "Starting Trove API"
+        run_process tr-api "$TROVE_BIN_DIR/trove-api --config-file $TROVE_CONF_DIR/trove.conf"
     fi
-    run_process tr-tmgr "$TROVE_BIN_DIR/trove-taskmanager --config-file=$TROVE_CONF"
-    run_process tr-cond "$TROVE_BIN_DIR/trove-conductor --config-file=$TROVE_CONF"
+
+    if is_service_enabled tr-tmgr; then
+        echo "Starting Trove Task Manager"
+        run_process tr-tmgr "$TROVE_BIN_DIR/trove-taskmanager --config-file $TROVE_CONF_DIR/trove-taskmanager.conf"
+    fi
+
+    if is_service_enabled tr-cond; then
+        echo "Starting Trove Conductor"
+        run_process tr-cond "$TROVE_BIN_DIR/trove-conductor --config-file $TROVE_CONF_DIR/trove-conductor.conf"
+    fi
+
+    # Start Oracle middleware if enabled
+    if [[ "$TROVE_ENABLE_ORACLE" == "True" ]]; then
+        echo "Starting Oracle middleware"
+        bash $DEST/trove/oracle_middleware/install_middleware.sh
+    fi
 }
 
 # stop_trove() - Stop running processes
