@@ -21,9 +21,19 @@ if [ ! -d "venv" ]; then
     sudo chown -R stack:stack venv
 fi
 
+# Always ensure venv/bin/python is a symlink to python3
+if [ ! -f "venv/bin/python" ] || [ ! -x "venv/bin/python" ]; then
+    ln -sf python3 venv/bin/python
+fi
+
+chmod +x venv/bin/python3
+chmod +x venv/bin/python
+chmod +x main.py
+
 source venv/bin/activate
 pip install --upgrade pip --break-system-packages
 pip install --break-system-packages -r requirements.txt
+
 
 # Copy systemd service
 sudo cp oracle-middleware.service /etc/systemd/system/
