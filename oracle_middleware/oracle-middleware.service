@@ -1,9 +1,6 @@
 [Unit]
 Description=Oracle Middleware Service for Trove
-After=trove-api.service trove-taskmanager.service mysql.service rabbitmq-server.service
-Wants=trove-api.service trove-taskmanager.service mysql.service rabbitmq-server.service
-# Explicitly declare we don't need Nova
-Conflicts=nova-compute.service nova-api.service nova-conductor.service nova-scheduler.service
+After=network.target
 
 [Service]
 Type=simple
@@ -18,4 +15,4 @@ StandardOutput=append:/var/log/trove/oracle-middleware.log
 StandardError=append:/var/log/trove/oracle-middleware.log
 
 [Install]
-WantedBy=multi-user.target 
+WantedBy=multi-user.target
