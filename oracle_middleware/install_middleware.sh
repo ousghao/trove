@@ -22,7 +22,7 @@ if [ ! -d "venv" ]; then
 fi
 
 source venv/bin/activate
-pip install --upgrade pip
+pip install --upgrade pip --break-system-packages
 pip install --break-system-packages -r requirements.txt
 
 # Copy systemd service
